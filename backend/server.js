@@ -4,22 +4,34 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
+
+const allowedOrigins = [
+  "https://sbicard-p981.onrender.com",
+  "http://localhost:5173"
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://sbicard-p981.onrender.com"|| "http://localhost:5173",
-  // origin: "https://sbicard-p981.onrender.com",
-  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
 }));
+
+app.options("*", cors());
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI);
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", function () {
+mongoose.connection.once("open", () => {
   console.log("MONGO Connected successfully");
 });
-
 
 app.use("/api/customers", require("./routes/customer.routes"));
 app.use("/api/auth", require("./routes/auth.routes"));
 
-app.listen(process.env.PORT, () => console.log("Server running on 5000"));
+app.listen(process.env.PORT, () =>
+  console.log("Server running on", process.env.PORT)
+);
