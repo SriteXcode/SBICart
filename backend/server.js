@@ -20,6 +20,7 @@ db.once("open", function () {
 
 
 app.use("/api/customers", require("./routes/customer.routes"));
+app.use("/api/ptps", require("./routes/ptp.routes"));
 app.use("/api/auth", require("./routes/auth.routes"));
 
 app.listen(process.env.PORT, () => console.log("Server running on 5000"));
