@@ -49,6 +49,16 @@ export default function BulkUploadModal({ onClose, onSuccess }) {
           else if (header.includes("note")) obj.notes = val;
         });
         
+        // Auto-extract pincode if not found in columns but present in address
+        if (obj.address && (!obj.pincode || obj.pincode === "")) {
+          const match = String(obj.address).match(/\b\d{6}\b/);
+          if (match) {
+            obj.pincode = match[0];
+            obj.address = String(obj.address).replace(match[0], "").replace(/,\s*,/g, ",").trim();
+            if (obj.address.endsWith(",")) obj.address = obj.address.slice(0, -1).trim();
+          }
+        }
+
         // Defaults
         if (!obj.status) obj.status = "Active";
         if (!obj.name) obj.name = "Unknown"; // specific handling?

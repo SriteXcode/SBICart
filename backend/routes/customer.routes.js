@@ -5,6 +5,20 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
+const extractPincode = (data) => {
+  if (data.address && (!data.pincode || data.pincode.trim() === "")) {
+    const match = data.address.match(/\b\d{6}\b/);
+    if (match) {
+      data.pincode = match[0];
+      // Optional: remove pincode from address
+      data.address = data.address.replace(match[0], "").replace(/,\s*,/g, ",").trim();
+      // Clean up trailing commas or spaces
+      if (data.address.endsWith(",")) data.address = data.address.slice(0, -1).trim();
+    }
+  }
+  return data;
+};
+
 /* GET customers (search + sort) */
 router.get("/", auth, async (req, res) => {
   const { search = "", sort = "newest", todaysVisit, pincode } = req.query;
@@ -55,8 +69,9 @@ router.get("/pincodes", auth, async (req, res) => {
 
 /* ADD */
 router.post("/", auth, async (req, res) => {
+  const data = extractPincode({ ...req.body });
   const customer = await Customer.create({
-    ...req.body,
+    ...data,
     user: req.user.id,
   });
 
@@ -66,10 +81,13 @@ router.post("/", auth, async (req, res) => {
 /* BULK ADD */
 router.post("/bulk", auth, async (req, res) => {
   try {
-    const customers = req.body.map(c => ({
-      ...c,
-      user: req.user.id
-    }));
+    const customers = req.body.map(c => {
+      const cleaned = extractPincode({ ...c });
+      return {
+        ...cleaned,
+        user: req.user.id
+      };
+    });
     
     // Use insertMany for bulk creation
     const created = await Customer.insertMany(customers);
@@ -83,9 +101,10 @@ router.post("/bulk", auth, async (req, res) => {
 
 /* UPDATE */
 router.put("/:id", auth, async (req, res) => {
+  const data = extractPincode({ ...req.body });
   const updated = await Customer.findOneAndUpdate(
   { _id: req.params.id, user: req.user.id },
-  req.body,
+  data,
   { new: true }
 );
 
