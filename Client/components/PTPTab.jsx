@@ -218,39 +218,7 @@ export default function PTPTab() {
                 position: "relative"
               }}
             >
-              <button 
-                onClick={() => handleDelete(ptp._id)}
-                style={{
-                    position: "absolute",
-                    top: "10px",
-                    right: "10px",
-                    background: "transparent",
-                    border: "none",
-                    color: "#888",
-                    cursor: "pointer",
-                    fontSize: "1.2rem"
-                }}
-              >
-                &times;
-              </button>
-              
-              <button 
-                onClick={() => setEditPTP(ptp)}
-                style={{
-                    position: "absolute",
-                    top: "10px",
-                    right: "40px",
-                    background: "transparent",
-                    border: "none",
-                    color: "#646cff",
-                    cursor: "pointer",
-                    fontSize: "1rem"
-                }}
-              >
-                ✎
-              </button>
-
-              <h3 style={{ margin: "0 0 5px 0", paddingRight: "50px" }}>{ptp.name}</h3>
+              <h3 style={{ margin: "0 0 5px 0" }}>{ptp.name}</h3>
               <p style={{ margin: "5px 0", color: "#ccc" }}>Account: {ptp.accountNo || "N/A"}</p>
               <p style={{ margin: "5px 0", color: "#ccc" }}>Phone: {ptp.phone || "N/A"}</p>
               <p style={{ margin: "5px 0", color: "#646cff", fontWeight: "bold" }}>
@@ -267,7 +235,7 @@ export default function PTPTab() {
                     {ptp.status}
                 </span>
 
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div style={{ display: "flex", gap: "6px" }}>
                     {ptp.phone && (
                         <a 
                             href={`tel:${ptp.phone}`}
@@ -275,7 +243,7 @@ export default function PTPTab() {
                                 background: "#007bff",
                                 color: "#fff",
                                 textDecoration: "none",
-                                padding: "5px 10px",
+                                padding: "6px 10px",
                                 borderRadius: "4px",
                                 fontSize: "0.8rem",
                                 display: "flex",
@@ -289,18 +257,46 @@ export default function PTPTab() {
                         <button 
                             onClick={() => handleStatusChange(ptp._id, "Paid")}
                             style={{
-                                background: "#a72828",
+                                background: "#28a745",
                                 color: "#fff",
                                 border: "none",
-                                padding: "5px 10px",
+                                padding: "6px 10px",
                                 borderRadius: "4px",
                                 cursor: "pointer",
                                 fontSize: "0.8rem"
                             }}
                         >
-                            Not Paid
+                            Mark Paid
                         </button>
                     )}
+                    <button 
+                      onClick={() => setEditPTP(ptp)}
+                      style={{
+                          background: "#444",
+                          color: "#fff",
+                          border: "none",
+                          padding: "6px 10px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "0.8rem"
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(ptp._id)}
+                      style={{
+                          background: "#dc3545",
+                          color: "#fff",
+                          border: "none",
+                          padding: "6px 10px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "0.8rem"
+                      }}
+                    >
+                      🗑️
+                    </button>
                 </div>
               </div>
             </div>

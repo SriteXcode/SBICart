@@ -15,6 +15,8 @@ const customerSchema = new mongoose.Schema(
     balance: Number,
     cd: String,
     address: String,
+    pincode: String,
+    todaysVisit: { type: Boolean, default: false },
     cycleDate: Date,
     status: { type: String, default: "Active" },
     review: String,

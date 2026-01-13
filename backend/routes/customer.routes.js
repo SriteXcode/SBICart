@@ -7,18 +7,27 @@ const router = express.Router();
 
 /* GET customers (search + sort) */
 router.get("/", auth, async (req, res) => {
-  const { search = "", sort = "newest" } = req.query;
+  const { search = "", sort = "newest", todaysVisit, pincode } = req.query;
 
   const query = {
-  user: req.user.id,
-  isArchived: false,
-  $or: [
-    { name: new RegExp(search, "i") },
-    { accountNo: new RegExp(search, "i") },
-    { mobile: new RegExp(search, "i") },
-  ],
-};
+    user: req.user.id,
+    isArchived: false,
+    $or: [
+      { name: new RegExp(search, "i") },
+      { accountNo: new RegExp(search, "i") },
+      { mobile: new RegExp(search, "i") },
+      { pincode: new RegExp(search, "i") },
+      { address: new RegExp(search, "i") }, // also search in address text
+    ],
+  };
 
+  if (pincode) {
+    query.pincode = pincode;
+  }
+
+  if (todaysVisit === "true") {
+    query.todaysVisit = true;
+  }
 
   let sortObj = { createdAt: -1 };
   if (sort === "alpha") sortObj = { name: 1 };
@@ -26,6 +35,22 @@ router.get("/", auth, async (req, res) => {
 
   const data = await Customer.find(query).sort(sortObj);
   res.json(data);
+});
+
+/* GET unique pincodes */
+router.get("/pincodes", auth, async (req, res) => {
+  try {
+    const pincodes = await Customer.distinct("pincode", { 
+      user: req.user.id, 
+      isArchived: false,
+      pincode: { $ne: null } // exclude nulls
+    });
+    // Filter out empty strings if any and sort
+    const cleanPincodes = pincodes.filter(p => p && p.trim() !== "").sort();
+    res.json(cleanPincodes);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching pincodes" });
+  }
 });
 
 /* ADD */
@@ -36,6 +61,23 @@ router.post("/", auth, async (req, res) => {
   });
 
   res.json(customer);
+});
+
+/* BULK ADD */
+router.post("/bulk", auth, async (req, res) => {
+  try {
+    const customers = req.body.map(c => ({
+      ...c,
+      user: req.user.id
+    }));
+    
+    // Use insertMany for bulk creation
+    const created = await Customer.insertMany(customers);
+    res.json(created);
+  } catch (err) {
+    console.error("Bulk upload error:", err);
+    res.status(500).json({ message: "Error uploading customers" });
+  }
 });
 
 

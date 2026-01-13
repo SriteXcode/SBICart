@@ -5,21 +5,45 @@ export default function CustomerCard({
   onEdit,
   onDelete,
   onReport,
+  onToggleVisit
 }) {
   return (
     <div
       onClick={onClick}
       style={{
-        border: "1px solid #444",
+        border: c.todaysVisit ? "2px solid #ffd700" : "1px solid #444", // Highlight if today's visit
         padding: "12px",
         borderRadius: "8px",
         background: "#1e1e1e",
         cursor: "pointer",
+        position: "relative"
       }}
     >
-      <h4>{c.name}</h4>
+      {/* Today's Visit Toggle */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleVisit(c);
+        }}
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          background: "transparent",
+          border: "none",
+          fontSize: "1.5rem",
+          cursor: "pointer",
+          filter: c.todaysVisit ? "grayscale(0%)" : "grayscale(100%) brightness(0.5)"
+        }}
+        title="Mark for Today's Visit"
+      >
+        🚩
+      </button>
+
+      <h4 style={{ marginRight: "30px" }}>{c.name}</h4>
       <p>📞 {c.mobile}</p>
       <p>💰 ₹{c.balance}</p>
+      {c.pincode && <p>📍 {c.pincode}</p>}
 
       {view === "grid" && (
         <>

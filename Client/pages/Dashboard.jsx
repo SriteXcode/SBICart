@@ -5,6 +5,7 @@ import CustomerCard from "../components/CustomerCard";
 import CustomerDetailsModal from "../components/CustomerDetailsModal";
 import EditCustomer from "../components/EditCustomer";
 import AddCustomer from "../components/AddCustomer";
+import BulkUploadModal from "../components/BulkUploadModal";
 import CDReportModal from "../components/CDReportModal";
 import Stats from "../components/Stats";
 import PTPTab from "../components/PTPTab";
@@ -20,18 +21,31 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [todaysVisitFilter, setTodaysVisitFilter] = useState(false);
+  const [pincodeFilter, setPincodeFilter] = useState("");
+  const [availablePincodes, setAvailablePincodes] = useState([]);
 
   const [view, setView] = useState("list"); // list | grid
 
   const [selected, setSelected] = useState(null); // details view
   const [edit, setEdit] = useState(null); // edit popup
   const [showAdd, setShowAdd] = useState(false); // add popup
+  const [showBulkUpload, setShowBulkUpload] = useState(false); // bulk upload popup
   const [reportCustomer, setReportCustomer] = useState(null); // CD report popup
+
+  const fetchPincodes = async () => {
+    try {
+      const res = await api.get("/customers/pincodes");
+      setAvailablePincodes(res.data);
+    } catch (err) {
+      console.error("Error fetching pincodes", err);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/customers?search=${search}&sort=${sort}`);
+      const res = await api.get(`/customers?search=${search}&sort=${sort}&todaysVisit=${todaysVisitFilter}&pincode=${pincodeFilter}`);
       setData(res.data);
     } catch (err) {
       console.error("Fetch Error", err);
@@ -71,15 +85,30 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeTab === "customers") {
       fetchData();
+      fetchPincodes(); // Update pincodes list
     }
     window.addEventListener("online", () => syncOffline(api));
     checkReminders();
-  }, [search, sort, activeTab]);
+  }, [search, sort, activeTab, todaysVisitFilter, pincodeFilter]);
 
   const handleDelete = async (id) => {
     await api.delete(`/customers/${id}`);
     toast.success("Customer archived");
     fetchData();
+  };
+
+  const handleToggleVisit = async (c) => {
+    try {
+      const updated = { ...c, todaysVisit: !c.todaysVisit };
+      // Optimistic update
+      setData(prev => prev.map(item => item._id === c._id ? updated : item));
+      
+      await api.put(`/customers/${c._id}`, { todaysVisit: updated.todaysVisit });
+      toast.success(updated.todaysVisit ? "Marked for Today's Visit" : "Removed from Today's Visit");
+    } catch (err) {
+      console.error("Error toggling visit", err);
+      fetchData(); // revert on error
+    }
   };
 
   return (
@@ -141,31 +170,45 @@ export default function Dashboard() {
         <>
           <Stats />
 
-          {/* ADD CUSTOMER */}
-          <button
-            onClick={() => setShowAdd(true)}
-            style={{
-              width: "100%",
-              padding: "14px",
-              background: "#646cff",
-              color: "#fff",
-              borderRadius: "8px",
-              border: "none",
-              marginBottom: "10px",
-            }}
-          >
-            + Add New Customer
-          </button>
+          {/* ADD CUSTOMER & UPLOAD */}
+          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+            <button
+              onClick={() => setShowAdd(true)}
+              style={{
+                flex: 1,
+                padding: "14px",
+                background: "#646cff",
+                color: "#fff",
+                borderRadius: "8px",
+                border: "none",
+              }}
+            >
+              + Add Customer
+            </button>
+            <button
+              onClick={() => setShowBulkUpload(true)}
+              style={{
+                flex: 1,
+                padding: "14px",
+                background: "#28a745",
+                color: "#fff",
+                borderRadius: "8px",
+                border: "none",
+              }}
+            >
+              📤 Upload Excel
+            </button>
+          </div>
 
           {/* SEARCH */}
           <input
-            placeholder="Search by name / account / mobile"
+            placeholder="Search by name / account / mobile / address"
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
           />
 
-          {/* VIEW TOGGLE */}
-          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+          {/* VIEW TOGGLE & FILTER */}
+          <div style={{ display: "flex", gap: "10px", marginBottom: "10px", flexWrap: "wrap", alignItems: "center" }}>
             <button
               onClick={() => setView("list")}
               style={{
@@ -187,6 +230,37 @@ export default function Dashboard() {
               }}
             >
               🟦 Grid
+            </button>
+
+            {/* Pincode Filter */}
+            <select
+              value={pincodeFilter}
+              onChange={(e) => setPincodeFilter(e.target.value)}
+              style={{
+                background: "#333",
+                color: "#fff",
+                padding: "6px 10px",
+                borderRadius: "6px",
+                border: "none"
+              }}
+            >
+              <option value="">📍 All Pincodes</option>
+              {availablePincodes.map(pin => (
+                <option key={pin} value={pin}>{pin}</option>
+              ))}
+            </select>
+            
+            <button
+              onClick={() => setTodaysVisitFilter(!todaysVisitFilter)}
+              style={{
+                background: todaysVisitFilter ? "#ffd700" : "#333",
+                color: todaysVisitFilter ? "#000" : "#fff",
+                padding: "6px 10px",
+                borderRadius: "6px",
+                marginLeft: "auto"
+              }}
+            >
+              {todaysVisitFilter ? "⭐ Showing Today's Visits" : "⭐ Show Today's Visits"}
             </button>
           </div>
 
@@ -227,6 +301,7 @@ export default function Dashboard() {
                   onEdit={setEdit}
                   onReport={setReportCustomer}
                   onDelete={handleDelete}
+                  onToggleVisit={handleToggleVisit}
                 />
               ))}
               {data.length === 0 && <p style={{ textAlign: "center", color: "#888" }}>No customers found.</p>}
@@ -258,6 +333,17 @@ export default function Dashboard() {
                 fetchData();
               }}
               onCancel={() => setShowAdd(false)}
+            />
+          )}
+
+          {/* BULK UPLOAD POPUP */}
+          {showBulkUpload && (
+            <BulkUploadModal
+              onClose={() => setShowBulkUpload(false)}
+              onSuccess={() => {
+                setShowBulkUpload(false);
+                fetchData();
+              }}
             />
           )}
 

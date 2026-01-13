@@ -148,6 +148,14 @@ export default function AddCustomer({ onAdd, onCancel }) {
           style={{...inputStyle, height: "80px"}}
         />
 
+        <input 
+          name="pincode" 
+          placeholder="Pincode" 
+          value={formData.pincode || ""} 
+          onChange={handleChange} 
+          style={inputStyle}
+        />
+
         <div style={{ display: 'flex', gap: '10px' }}>
           <div style={{ flex: 1 }}>
             <label style={{ fontSize: '0.8em' }}>Cycle Date</label>

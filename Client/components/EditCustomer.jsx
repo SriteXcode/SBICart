@@ -11,6 +11,7 @@ export default function EditCustomer({ c, onClose, refresh }) {
     balance: c.balance || "",
     cd: c.cd || "",
     address: c.address || "",
+    pincode: c.pincode || "",
     cycleDate: c.cycleDate ? c.cycleDate.slice(0, 10) : "",
     status: c.status || "Active",
     review: c.review || "",
@@ -61,6 +62,7 @@ export default function EditCustomer({ c, onClose, refresh }) {
           <input name="cd" value={form.cd} onChange={handleChange} placeholder="CD" />
 
           <textarea name="address" value={form.address} onChange={handleChange} placeholder="Address" />
+          <input name="pincode" value={form.pincode} onChange={handleChange} placeholder="Pincode" />
 
           <input name="cycleDate" type="date" value={form.cycleDate} onChange={handleChange} />
 
