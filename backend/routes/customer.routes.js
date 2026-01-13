@@ -66,19 +66,30 @@ router.delete("/:id", auth, async (req, res) => {
 
 /* DASHBOARD STATS */
 router.get("/stats", auth, async (req, res) => {
-  const totalCustomers = await Customer.countDocuments({
-  user: req.user.id,
-  isArchived: false,
-});
- const totalBalanceAgg = await Customer.aggregate([
-  { $match: { user: mongoose.Types.ObjectId(req.user.id), isArchived: false } },
-  { $group: { _id: null, total: { $sum: "$balance" } } },
-]);
+  try {
+    const totalCustomers = await Customer.countDocuments({
+      user: req.user.id,
+      isArchived: false,
+    });
 
-  res.json({
-    totalCustomers,
-    totalBalance: totalBalanceAgg[0]?.total || 0
-  });
+    const totalBalanceAgg = await Customer.aggregate([
+      { 
+        $match: { 
+          user: new mongoose.Types.ObjectId(req.user.id), 
+          isArchived: false 
+        } 
+      },
+      { $group: { _id: null, total: { $sum: "$balance" } } },
+    ]);
+
+    res.json({
+      totalCustomers,
+      totalBalance: totalBalanceAgg[0]?.total || 0
+    });
+  } catch (err) {
+    console.error("STATS ERROR:", err);
+    res.status(500).json({ message: "Server error fetching stats" });
+  }
 });
 
 router.get("/export/csv", auth, async (req, res) => {
