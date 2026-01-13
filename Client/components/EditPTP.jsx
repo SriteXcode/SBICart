@@ -38,15 +38,15 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: "400px" }}>
+    <div style={overlayStyle}>
+      <div style={modalStyle}>
         <h3 style={{ borderBottom: "1px solid #444", paddingBottom: "10px", marginBottom: "20px" }}>
           Edit Reminder
         </h3>
         
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: "15px" }}>
-            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Customer Name</label>
+            <label style={labelStyle}>Customer Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -56,7 +56,7 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
           </div>
 
           <div style={{ marginBottom: "15px" }}>
-            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Account Number</label>
+            <label style={labelStyle}>Account Number</label>
             <input
               value={accountNo}
               onChange={(e) => setAccountNo(e.target.value)}
@@ -65,7 +65,7 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
           </div>
 
           <div style={{ marginBottom: "15px" }}>
-            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Phone Number</label>
+            <label style={labelStyle}>Phone Number</label>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -74,7 +74,7 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
           </div>
 
           <div style={{ marginBottom: "15px" }}>
-            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Promise Date</label>
+            <label style={labelStyle}>Promise Date</label>
             <input
               type="date"
               value={ptpDate}
@@ -85,7 +85,7 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
           </div>
 
           <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Status</label>
+            <label style={labelStyle}>Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
@@ -101,13 +101,13 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
             <button 
               type="button" 
               onClick={onCancel} 
-              style={{ flex: 1, background: "#444", color: "#fff", border: "none", padding: "10px", borderRadius: "6px", cursor: "pointer" }}
+              style={{ ...buttonStyle, background: "#444" }}
             >
               Cancel
             </button>
             <button 
               disabled={loading} 
-              style={{ flex: 1, background: "#646cff", color: "#fff", border: "none", padding: "10px", borderRadius: "6px", cursor: "pointer", opacity: loading ? 0.7 : 1 }}
+              style={{ ...buttonStyle, background: "#646cff", opacity: loading ? 0.7 : 1 }}
             >
               {loading ? "Saving..." : "Save Changes"}
             </button>
@@ -118,12 +118,54 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
   );
 }
 
+const overlayStyle = {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.7)",
+    backdropFilter: "blur(5px)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    paddingTop: "40px",
+    zIndex: 9999,
+};
+
+const modalStyle = {
+    background: "#1a1a1a",
+    color: "#fff",
+    padding: "25px",
+    borderRadius: "16px",
+    width: "90%",
+    maxWidth: "400px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+    border: "1px solid #333",
+};
+
+const labelStyle = {
+    display: "block",
+    marginBottom: "5px",
+    color: "#ccc",
+    fontSize: "0.9rem"
+};
+
 const inputStyle = {
-  width: "100%", 
-  padding: "10px", 
-  borderRadius: "6px", 
-  border: "1px solid #444", 
-  background: "#222", 
-  color: "#fff",
-  outline: "none"
+    width: "100%", 
+    padding: "12px", 
+    borderRadius: "8px", 
+    border: "1px solid #333", 
+    background: "#2a2a2a", 
+    color: "#fff",
+    outline: "none",
+    boxSizing: "border-box"
+};
+
+const buttonStyle = {
+    flex: 1, 
+    border: "none", 
+    padding: "12px", 
+    borderRadius: "8px", 
+    cursor: "pointer", 
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: "1rem"
 };
