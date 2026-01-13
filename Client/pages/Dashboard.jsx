@@ -32,14 +32,6 @@ export default function Dashboard() {
     setData(res.data);
   };
 
-  useEffect(() => {
-    if (activeTab === "customers") {
-      fetchData();
-    }
-    window.addEventListener("online", () => syncOffline(api));
-    checkReminders();
-  }, [search, sort, activeTab]);
-
   const checkReminders = async () => {
     try {
       const res = await api.get("/ptps");
@@ -67,6 +59,14 @@ export default function Dashboard() {
       console.error("Error checking reminders", err);
     }
   };
+
+  useEffect(() => {
+    if (activeTab === "customers") {
+      fetchData();
+    }
+    window.addEventListener("online", () => syncOffline(api));
+    checkReminders();
+  }, [search, sort, activeTab]);
 
   const handleDelete = async (id) => {
     await api.delete(`/customers/${id}`);
