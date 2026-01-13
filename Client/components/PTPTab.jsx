@@ -8,6 +8,10 @@ export default function PTPTab() {
   const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Filters
+  const [filterDate, setFilterDate] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All"); // All | Pending | Paid | Broken
+
   const fetchPTPs = async () => {
     setLoading(true);
     try {
@@ -35,6 +39,29 @@ export default function PTPTab() {
     }
   };
 
+  const handleStatusChange = async (id, status) => {
+    try {
+      await api.put(`/ptps/${id}`, { status });
+      toast.success(`PTP marked as ${status}`);
+      fetchPTPs();
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
       alert("This browser does not support desktop notification");
@@ -43,15 +70,38 @@ export default function PTPTab() {
     
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      new Notification("Notifications Enabled", {
-        body: "You will now receive PTP reminders.",
-        icon: "/vite.svg"
-      });
-      toast.success("Notifications enabled!");
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_PUBLIC_VAPID_KEY)
+        });
+
+        // Send subscription to backend
+        await api.post("/auth/subscribe", subscription);
+
+        new Notification("Notifications Enabled", {
+            body: "You will now receive daily PTP reminders.",
+            icon: "/vite.svg"
+        });
+        toast.success("Push notifications enabled!");
+      } catch (err) {
+        console.error("Push subscription error", err);
+        toast.error("Failed to subscribe to push notifications");
+      }
     } else {
       toast.error("Notification permission denied");
     }
   };
+
+  const filteredPTPs = ptps.filter(p => {
+    if (filterStatus !== "All" && p.status !== filterStatus) return false;
+    if (filterDate) {
+        const pDate = new Date(p.ptpDate).toISOString().split("T")[0];
+        if (pDate !== filterDate) return false;
+    }
+    return true;
+  });
 
   return (
     <div>
@@ -83,11 +133,39 @@ export default function PTPTab() {
         </button>
       </div>
 
+      {/* FILTERS */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "15px", flexWrap: "wrap" }}>
+        <input 
+            type="date" 
+            value={filterDate} 
+            onChange={(e) => setFilterDate(e.target.value)}
+            style={{ padding: "8px", borderRadius: "6px", border: "1px solid #333", background: "#222", color: "#fff" }}
+        />
+        <select 
+            value={filterStatus} 
+            onChange={(e) => setFilterStatus(e.target.value)}
+            style={{ padding: "8px", borderRadius: "6px", border: "1px solid #333", background: "#222", color: "#fff" }}
+        >
+            <option value="All">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+            <option value="Broken">Broken</option>
+        </select>
+        {(filterDate || filterStatus !== "All") && (
+            <button 
+                onClick={() => { setFilterDate(""); setFilterStatus("All"); }}
+                style={{ padding: "8px 12px", background: "#444", border: "none", color: "#fff", borderRadius: "6px" }}
+            >
+                Clear Filters
+            </button>
+        )}
+      </div>
+
       {loading ? (
         <p>Loading PTPs...</p>
       ) : (
         <div style={{ display: "grid", gap: "10px", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
-          {ptps.map((ptp) => (
+          {filteredPTPs.map((ptp) => (
             <div
               key={ptp._id}
               style={{
@@ -118,19 +196,37 @@ export default function PTPTab() {
               <p style={{ margin: "5px 0", color: "#646cff", fontWeight: "bold" }}>
                 Date: {new Date(ptp.ptpDate).toDateString()}
               </p>
-              <span style={{ 
-                display: "inline-block", 
-                padding: "2px 8px", 
-                borderRadius: "4px", 
-                fontSize: "0.8rem",
-                background: ptp.status === "Paid" ? "green" : "#444",
-                marginTop: "5px"
-              }}>
-                {ptp.status}
-              </span>
+              
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+                <span style={{ 
+                    padding: "2px 8px", 
+                    borderRadius: "4px", 
+                    fontSize: "0.8rem",
+                    background: ptp.status === "Paid" ? "green" : ptp.status === "Broken" ? "red" : "#444",
+                }}>
+                    {ptp.status}
+                </span>
+
+                {ptp.status === "Pending" && (
+                    <button 
+                        onClick={() => handleStatusChange(ptp._id, "Paid")}
+                        style={{
+                            background: "#28a745",
+                            color: "#fff",
+                            border: "none",
+                            padding: "5px 10px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem"
+                        }}
+                    >
+                        ✓ Mark Paid
+                    </button>
+                )}
+              </div>
             </div>
           ))}
-          {ptps.length === 0 && <p style={{ color: "#888" }}>No PTPs found.</p>}
+          {filteredPTPs.length === 0 && <p style={{ color: "#888" }}>No PTPs found.</p>}
         </div>
       )}
 

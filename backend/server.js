@@ -18,6 +18,10 @@ db.once("open", function () {
   console.log("MONGO Connected successfully");
 });
 
+// Init Scheduler
+const initScheduler = require("./scheduler");
+initScheduler();
+
 
 app.use("/api/customers", require("./routes/customer.routes"));
 app.use("/api/ptps", require("./routes/ptp.routes"));

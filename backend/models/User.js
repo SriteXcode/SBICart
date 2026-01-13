@@ -11,15 +11,24 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
     },
 
-    phone: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
+        phone: {
 
-    password: { type: String, required: true },
-  },
-  { timestamps: true }
-);
+          type: String,
+
+          unique: true,
+
+          sparse: true,
+
+        },
+
+        password: { type: String, required: true },
+
+        pushSubscription: { type: Object }, // Store the PushSubscription object here
+
+      },
+
+      { timestamps: true }
+
+    );
 
 module.exports = mongoose.model("User", userSchema);

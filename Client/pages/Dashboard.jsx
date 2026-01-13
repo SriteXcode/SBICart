@@ -37,7 +37,36 @@ export default function Dashboard() {
       fetchData();
     }
     window.addEventListener("online", () => syncOffline(api));
+    checkReminders();
   }, [search, sort, activeTab]);
+
+  const checkReminders = async () => {
+    try {
+      const res = await api.get("/ptps");
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+      const due = res.data.filter((p) => {
+        const pDate = new Date(p.ptpDate).toISOString().split("T")[0];
+        return pDate === today && p.status === "Pending";
+      });
+
+      if (due.length > 0) {
+        if (Notification.permission === "granted") {
+          due.forEach((p) => {
+            new Notification(`PTP Reminder: ${p.name}`, {
+              body: `Amount Due. Account: ${p.accountNo || "N/A"}`,
+              icon: "/vite.svg",
+            });
+          });
+        } else if (Notification.permission !== "denied") {
+            // Optional: Ask for permission if not asked yet, 
+            // but usually better to let user click the button in PTP tab
+        }
+      }
+    } catch (err) {
+      console.error("Error checking reminders", err);
+    }
+  };
 
   const handleDelete = async (id) => {
     await api.delete(`/customers/${id}`);

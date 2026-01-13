@@ -49,6 +49,24 @@ router.post("/", async (req, res) => {
   }
 });
 
+// PUT update PTP status
+router.put("/:id", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const ptp = await PTP.findOneAndUpdate(
+      { _id: req.params.id, user: req.userId },
+      { status },
+      { new: true }
+    );
+    if (!ptp) {
+      return res.status(404).json({ message: "PTP not found" });
+    }
+    res.json(ptp);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // DELETE a PTP
 router.delete("/:id", async (req, res) => {
   try {

@@ -1,11 +1,28 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { api } from "../api";
 
 export default function CustomerDetailsModal({ c, onClose }) {
+  const [ptp, setPtp] = useState(null);
+
   useEffect(() => {
     const esc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
+
+    // Fetch PTP for this customer
+    const fetchPTP = async () => {
+      try {
+        const res = await api.get("/ptps");
+        // Client-side filtering for simplicity, ideally backend should support query by customerId
+        const found = res.data.find(p => p.customer === c._id && p.status === "Pending");
+        setPtp(found);
+      } catch (err) {
+        console.error("Failed to fetch PTP info", err);
+      }
+    };
+    fetchPTP();
+
     return () => window.removeEventListener("keydown", esc);
-  }, [onClose]);
+  }, [onClose, c._id]);
 
   return (
     <div style={overlay} onClick={onClose}>
@@ -23,6 +40,13 @@ export default function CustomerDetailsModal({ c, onClose }) {
         <p><b>Ex Day Amount:</b> ₹{c.exDayAmount}</p>
         <p><b>Address:</b> {c.address}</p>
         <p><b>Notes:</b> {c.notes}</p>
+
+        {ptp && (
+            <div style={{ marginTop: "15px", padding: "10px", background: "#333", borderRadius: "8px", border: "1px solid #646cff" }}>
+                <h4 style={{ margin: "0 0 5px 0", color: "#646cff" }}>⚠️ PTP Active</h4>
+                <p style={{ margin: "0" }}>Promise Date: {new Date(ptp.ptpDate).toDateString()}</p>
+            </div>
+        )}
 
         <button onClick={onClose} style={{ marginTop: "10px" }}>
           Close

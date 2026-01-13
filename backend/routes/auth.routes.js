@@ -80,4 +80,22 @@ router.post("/login", async (req, res) => {
   });
 });
 
+/* ================= PUSH SUBSCRIPTION ================= */
+// Note: Ideally this should be in a protected route file or utilize the auth middleware
+// For now, we will require the user to send their ID or token.
+// Better: Let's assume the frontend sends the token in headers, so we can use the middleware inside the route handler or apply it to this specific route if we import it.
+// I will import the auth middleware to secure this route.
+const auth = require("../middleware/auth");
+
+router.post("/subscribe", auth, async (req, res) => {
+  try {
+    const subscription = req.body;
+    await User.findByIdAndUpdate(req.userId, { pushSubscription: subscription });
+    res.status(201).json({ message: "Subscription saved" });
+  } catch (err) {
+    console.error("Subscription Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
