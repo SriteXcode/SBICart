@@ -46,13 +46,13 @@ const initScheduler = () => {
             const ptpList = userPTPs[userId];
             const count = ptpList.length;
             const message = count === 1 
-                ? `Reminder: ${ptpList[0].name} promised to pay today.` 
-                : `You have ${count} PTP promises due today.`;
+                ? `Action Required: ${ptpList[0].name} - Payment Promise Today.` 
+                : `Action Required: ${count} pending payment promises due today.`;
 
             const payload = JSON.stringify({
-                title: "Daily PTP Reminder",
+                title: "SBI Cart - PTP Alert",
                 body: message,
-                icon: "/vite.svg" // Adjust path if hosted
+                icon: "/vite.svg"
             });
 
             try {
