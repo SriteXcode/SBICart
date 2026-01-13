@@ -131,6 +131,25 @@ export default function PTPTab() {
         >
           🔔 Enable Notifications
         </button>
+        <button
+          onClick={async () => {
+             try {
+                await api.post("/ptps/test-notification");
+                toast.success("Test sent! Check your notifications.");
+             } catch (err) {
+                toast.error("Failed to send test. Ensure notifications are enabled.");
+             }
+          }}
+          style={{
+            padding: "14px",
+            background: "#555",
+            color: "#fff",
+            borderRadius: "8px",
+            border: "none",
+          }}
+        >
+          🧪 Test
+        </button>
       </div>
 
       {/* FILTERS */}

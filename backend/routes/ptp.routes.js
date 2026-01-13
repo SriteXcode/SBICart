@@ -1,15 +1,26 @@
 const express = require("express");
 const PTP = require("../models/PTP");
 const Customer = require("../models/Customer");
-const auth = require("../middleware/auth"); // Assuming you have an auth middleware
+const User = require("../models/User");
+const auth = require("../middleware/auth");
+const webpush = require("web-push");
 const router = express.Router();
 
-router.use(auth); // Protect all PTP routes
+// Configure web-push (ensure keys are loaded)
+if (process.env.PUBLIC_VAPID_KEY && process.env.PRIVATE_VAPID_KEY) {
+    webpush.setVapidDetails(
+      "mailto:example@yourdomain.org",
+      process.env.PUBLIC_VAPID_KEY,
+      process.env.PRIVATE_VAPID_KEY
+    );
+}
+
+router.use(auth);
 
 // GET all PTPs for the user
 router.get("/", async (req, res) => {
   try {
-    const ptps = await PTP.find({ user: req.userId }).sort({ ptpDate: 1 });
+    const ptps = await PTP.find({ user: req.user.id }).sort({ ptpDate: 1 });
     res.json(ptps);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -20,15 +31,14 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { type, customerId, name, accountNo, ptpDate } = req.body;
-    // type: "existing" | "manual"
-
+    
     let ptpData = {
-      user: req.userId,
+      user: req.user.id,
       ptpDate,
     };
 
     if (type === "existing" && customerId) {
-      const customer = await Customer.findOne({ _id: customerId, user: req.userId });
+      const customer = await Customer.findOne({ _id: customerId, user: req.user.id });
       if (!customer) {
         return res.status(404).json({ message: "Customer not found" });
       }
@@ -36,7 +46,6 @@ router.post("/", async (req, res) => {
       ptpData.name = customer.name;
       ptpData.accountNo = customer.accountNo;
     } else {
-      // Manual
       ptpData.name = name;
       ptpData.accountNo = accountNo;
     }
@@ -54,7 +63,7 @@ router.put("/:id", async (req, res) => {
   try {
     const { status } = req.body;
     const ptp = await PTP.findOneAndUpdate(
-      { _id: req.params.id, user: req.userId },
+      { _id: req.params.id, user: req.user.id },
       { status },
       { new: true }
     );
@@ -70,11 +79,33 @@ router.put("/:id", async (req, res) => {
 // DELETE a PTP
 router.delete("/:id", async (req, res) => {
   try {
-    await PTP.findOneAndDelete({ _id: req.params.id, user: req.userId });
+    await PTP.findOneAndDelete({ _id: req.params.id, user: req.user.id });
     res.json({ message: "PTP deleted" });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
+});
+
+// TEST NOTIFICATION
+router.post("/test-notification", async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user || !user.pushSubscription) {
+            return res.status(400).json({ message: "No subscription found" });
+        }
+
+        const payload = JSON.stringify({
+            title: "Test Notification",
+            body: "This is a test notification from SBICart.",
+            icon: "/vite.svg"
+        });
+
+        await webpush.sendNotification(user.pushSubscription, payload);
+        res.json({ message: "Notification sent" });
+    } catch (err) {
+        console.error("Test Notification Error:", err);
+        res.status(500).json({ message: "Failed to send notification" });
+    }
 });
 
 module.exports = router;
