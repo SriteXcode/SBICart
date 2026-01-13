@@ -90,7 +90,7 @@ const auth = require("../middleware/auth");
 router.post("/subscribe", auth, async (req, res) => {
   try {
     const subscription = req.body;
-    await User.findByIdAndUpdate(req.userId, { pushSubscription: subscription });
+    await User.findByIdAndUpdate(req.user.id, { pushSubscription: subscription });
     res.status(201).json({ message: "Subscription saved" });
   } catch (err) {
     console.error("Subscription Error:", err);
