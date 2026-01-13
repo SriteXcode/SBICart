@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { api } from "../api";
 import AddPTP from "./AddPTP";
+import EditPTP from "./EditPTP";
 import toast from "react-hot-toast";
 
 export default function PTPTab() {
   const [ptps, setPtps] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [editPTP, setEditPTP] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingTest, setLoadingTest] = useState(false);
 
@@ -106,7 +108,22 @@ export default function PTPTab() {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "15px", flexWrap: "wrap" }}>
+        <button
+            onClick={fetchPTPs}
+            style={{
+                background: "#444",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "0 14px",
+                fontSize: "1.2rem",
+                cursor: "pointer"
+            }}
+            title="Refresh List"
+        >
+            ↻
+        </button>
         <button
           onClick={() => setShowAdd(true)}
           style={{
@@ -216,7 +233,24 @@ export default function PTPTab() {
               >
                 &times;
               </button>
-              <h3 style={{ margin: "0 0 5px 0" }}>{ptp.name}</h3>
+              
+              <button 
+                onClick={() => setEditPTP(ptp)}
+                style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "40px",
+                    background: "transparent",
+                    border: "none",
+                    color: "#646cff",
+                    cursor: "pointer",
+                    fontSize: "1rem"
+                }}
+              >
+                ✎
+              </button>
+
+              <h3 style={{ margin: "0 0 5px 0", paddingRight: "50px" }}>{ptp.name}</h3>
               <p style={{ margin: "5px 0", color: "#ccc" }}>Account: {ptp.accountNo || "N/A"}</p>
               <p style={{ margin: "5px 0", color: "#ccc" }}>Phone: {ptp.phone || "N/A"}</p>
               <p style={{ margin: "5px 0", color: "#646cff", fontWeight: "bold" }}>
@@ -255,7 +289,7 @@ export default function PTPTab() {
                         <button 
                             onClick={() => handleStatusChange(ptp._id, "Paid")}
                             style={{
-                                background: "#28a745",
+                                background: "#a72828",
                                 color: "#fff",
                                 border: "none",
                                 padding: "5px 10px",
@@ -264,7 +298,7 @@ export default function PTPTab() {
                                 fontSize: "0.8rem"
                             }}
                         >
-                            ✓ Paid
+                            Not Paid
                         </button>
                     )}
                 </div>
@@ -282,6 +316,14 @@ export default function PTPTab() {
             fetchPTPs();
           }}
           onCancel={() => setShowAdd(false)}
+        />
+      )}
+      
+      {editPTP && (
+        <EditPTP
+          ptp={editPTP}
+          onCancel={() => setEditPTP(null)}
+          refresh={fetchPTPs}
         />
       )}
     </div>

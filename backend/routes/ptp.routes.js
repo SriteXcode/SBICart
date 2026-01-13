@@ -63,10 +63,11 @@ router.post("/", async (req, res) => {
 // PUT update PTP status
 router.put("/:id", async (req, res) => {
   try {
-    const { status } = req.body;
+    // Allow updating other fields too
+    const updates = req.body;
     const ptp = await PTP.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
-      { status },
+      updates,
       { new: true }
     );
     if (!ptp) {

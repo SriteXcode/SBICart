@@ -23,6 +23,7 @@ const initScheduler = () => {
       const duePTPs = await PTP.find({
         ptpDate: { $gte: today, $lt: tomorrow },
         status: "Pending",
+        notificationSent: false // Ensure we don't spam
       });
 
       console.log(`Found ${duePTPs.length} PTPs due today.`);
@@ -58,6 +59,11 @@ const initScheduler = () => {
             try {
                 await webpush.sendNotification(user.pushSubscription, payload);
                 console.log(`Notification sent to user ${user.name}`);
+
+                // Mark as sent
+                const ids = ptpList.map(p => p._id);
+                await PTP.updateMany({ _id: { $in: ids } }, { notificationSent: true });
+
             } catch (err) {
                 console.error(`Failed to send notification to ${user.name}:`, err);
                 // If 410 Gone, we should remove the subscription, but skipping for now
