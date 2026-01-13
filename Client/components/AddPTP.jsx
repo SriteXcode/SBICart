@@ -9,6 +9,7 @@ export default function AddPTP({ onAdd, onCancel }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [manualName, setManualName] = useState("");
   const [manualAccountNo, setManualAccountNo] = useState("");
+  const [manualPhone, setManualPhone] = useState("");
   const [ptpDate, setPtpDate] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -38,6 +39,7 @@ export default function AddPTP({ onAdd, onCancel }) {
         customerId: selectedCustomerId,
         name: manualName,
         accountNo: manualAccountNo,
+        phone: manualPhone,
         ptpDate,
       });
       onAdd();
@@ -109,6 +111,15 @@ export default function AddPTP({ onAdd, onCancel }) {
                 <input
                   value={manualAccountNo}
                   onChange={(e) => setManualAccountNo(e.target.value)}
+                  required
+                  style={{ width: "100%", padding: "8px" }}
+                />
+              </div>
+              <div style={{ marginBottom: "10px" }}>
+                <label>Phone No.</label>
+                <input
+                  value={manualPhone}
+                  onChange={(e) => setManualPhone(e.target.value)}
                   required
                   style={{ width: "100%", padding: "8px" }}
                 />

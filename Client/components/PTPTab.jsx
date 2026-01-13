@@ -218,11 +218,12 @@ export default function PTPTab() {
               </button>
               <h3 style={{ margin: "0 0 5px 0" }}>{ptp.name}</h3>
               <p style={{ margin: "5px 0", color: "#ccc" }}>Account: {ptp.accountNo || "N/A"}</p>
+              <p style={{ margin: "5px 0", color: "#ccc" }}>Phone: {ptp.phone || "N/A"}</p>
               <p style={{ margin: "5px 0", color: "#646cff", fontWeight: "bold" }}>
                 Date: {new Date(ptp.ptpDate).toDateString()}
               </p>
               
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", flexWrap: "wrap", gap: "10px" }}>
                 <span style={{ 
                     padding: "2px 8px", 
                     borderRadius: "4px", 
@@ -232,22 +233,41 @@ export default function PTPTab() {
                     {ptp.status}
                 </span>
 
-                {ptp.status === "Pending" && (
-                    <button 
-                        onClick={() => handleStatusChange(ptp._id, "Paid")}
-                        style={{
-                            background: "#28a745",
-                            color: "#fff",
-                            border: "none",
-                            padding: "5px 10px",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "0.8rem"
-                        }}
-                    >
-                        ✓ Mark Paid
-                    </button>
-                )}
+                <div style={{ display: "flex", gap: "10px" }}>
+                    {ptp.phone && (
+                        <a 
+                            href={`tel:${ptp.phone}`}
+                            style={{
+                                background: "#007bff",
+                                color: "#fff",
+                                textDecoration: "none",
+                                padding: "5px 10px",
+                                borderRadius: "4px",
+                                fontSize: "0.8rem",
+                                display: "flex",
+                                alignItems: "center"
+                            }}
+                        >
+                            📞 Call
+                        </a>
+                    )}
+                    {ptp.status === "Pending" && (
+                        <button 
+                            onClick={() => handleStatusChange(ptp._id, "Paid")}
+                            style={{
+                                background: "#28a745",
+                                color: "#fff",
+                                border: "none",
+                                padding: "5px 10px",
+                                borderRadius: "4px",
+                                cursor: "pointer",
+                                fontSize: "0.8rem"
+                            }}
+                        >
+                            ✓ Paid
+                        </button>
+                    )}
+                </div>
               </div>
             </div>
           ))}

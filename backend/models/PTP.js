@@ -21,6 +21,10 @@ const ptpSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    phone: {
+      type: String,
+      default: "",
+    },
     ptpDate: {
       type: Date,
       required: true,

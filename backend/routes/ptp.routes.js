@@ -30,7 +30,7 @@ router.get("/", async (req, res) => {
 // POST create a new PTP
 router.post("/", async (req, res) => {
   try {
-    const { type, customerId, name, accountNo, ptpDate } = req.body;
+    const { type, customerId, name, accountNo, phone, ptpDate } = req.body;
     
     let ptpData = {
       user: req.user.id,
@@ -45,9 +45,11 @@ router.post("/", async (req, res) => {
       ptpData.customer = customer._id;
       ptpData.name = customer.name;
       ptpData.accountNo = customer.accountNo;
+      ptpData.phone = customer.mobile;
     } else {
       ptpData.name = name;
       ptpData.accountNo = accountNo;
+      ptpData.phone = phone;
     }
 
     const newPTP = await PTP.create(ptpData);
