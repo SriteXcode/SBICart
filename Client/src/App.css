@@ -180,3 +180,6 @@ button {
     border-color: #eee;
   }
 }
+
+.spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #646cff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }

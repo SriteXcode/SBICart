@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("customers"); // customers | ptp
 
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
 
@@ -28,8 +29,15 @@ export default function Dashboard() {
   const [reportCustomer, setReportCustomer] = useState(null); // CD report popup
 
   const fetchData = async () => {
-    const res = await api.get(`/customers?search=${search}&sort=${sort}`);
-    setData(res.data);
+    setLoading(true);
+    try {
+      const res = await api.get(`/customers?search=${search}&sort=${sort}`);
+      setData(res.data);
+    } catch (err) {
+      console.error("Fetch Error", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const checkReminders = async () => {
@@ -193,29 +201,37 @@ export default function Dashboard() {
           </select>
 
           {/* CUSTOMER VIEW */}
-          <div
-            style={{
-              display: view === "grid" ? "grid" : "flex",
-              gridTemplateColumns:
-                view === "grid"
-                  ? "repeat(auto-fill, minmax(260px, 1fr))"
-                  : "none",
-              flexDirection: view === "list" ? "column" : "unset",
-              gap: "12px",
-            }}
-          >
-            {data.map((c) => (
-              <CustomerCard
-                key={c._id}
-                c={c}
-                view={view}
-                onClick={() => setSelected(c)}
-                onEdit={setEdit}
-                onReport={setReportCustomer}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "40px", color: "#888" }}>
+                <div className="spinner"></div>
+                <p>Loading customers...</p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: view === "grid" ? "grid" : "flex",
+                gridTemplateColumns:
+                  view === "grid"
+                    ? "repeat(auto-fill, minmax(260px, 1fr))"
+                    : "none",
+                flexDirection: view === "list" ? "column" : "unset",
+                gap: "12px",
+              }}
+            >
+              {data.map((c) => (
+                <CustomerCard
+                  key={c._id}
+                  c={c}
+                  view={view}
+                  onClick={() => setSelected(c)}
+                  onEdit={setEdit}
+                  onReport={setReportCustomer}
+                  onDelete={handleDelete}
+                />
+              ))}
+              {data.length === 0 && <p style={{ textAlign: "center", color: "#888" }}>No customers found.</p>}
+            </div>
+          )}
 
           {/* DETAILS POPUP */}
           {selected && (

@@ -7,6 +7,7 @@ export default function PTPTab() {
   const [ptps, setPtps] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingTest, setLoadingTest] = useState(false);
 
   // Filters
   const [filterDate, setFilterDate] = useState("");
@@ -133,22 +134,27 @@ export default function PTPTab() {
         </button>
         <button
           onClick={async () => {
+             setLoadingTest(true);
              try {
                 await api.post("/ptps/test-notification");
                 toast.success("Test sent! Check your notifications.");
              } catch (err) {
                 toast.error("Failed to send test. Ensure notifications are enabled.");
+             } finally {
+                setLoadingTest(false);
              }
           }}
+          disabled={loadingTest}
           style={{
             padding: "14px",
             background: "#555",
             color: "#fff",
             borderRadius: "8px",
             border: "none",
+            opacity: loadingTest ? 0.7 : 1
           }}
         >
-          🧪 Test
+          {loadingTest ? "Sending..." : "🧪 Test"}
         </button>
       </div>
 
