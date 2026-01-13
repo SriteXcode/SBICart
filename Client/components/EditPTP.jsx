@@ -39,54 +39,57 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Edit PTP</h3>
+      <div className="modal-content" style={{ maxWidth: "400px" }}>
+        <h3 style={{ borderBottom: "1px solid #444", paddingBottom: "10px", marginBottom: "20px" }}>
+          Edit Reminder
+        </h3>
+        
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Name</label>
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Customer Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              style={{ width: "100%", padding: "8px" }}
+              style={inputStyle}
             />
           </div>
 
-          <div style={{ marginBottom: "10px" }}>
-            <label>Account No.</label>
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Account Number</label>
             <input
               value={accountNo}
               onChange={(e) => setAccountNo(e.target.value)}
-              style={{ width: "100%", padding: "8px" }}
+              style={inputStyle}
             />
           </div>
 
-          <div style={{ marginBottom: "10px" }}>
-            <label>Phone</label>
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Phone Number</label>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              style={{ width: "100%", padding: "8px" }}
+              style={inputStyle}
             />
           </div>
 
-          <div style={{ marginBottom: "10px" }}>
-            <label>Date</label>
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Promise Date</label>
             <input
               type="date"
               value={ptpDate}
               onChange={(e) => setPtpDate(e.target.value)}
               required
-              style={{ width: "100%", padding: "8px" }}
+              style={inputStyle}
             />
           </div>
 
-          <div style={{ marginBottom: "10px" }}>
-            <label>Status</label>
+          <div style={{ marginBottom: "20px" }}>
+            <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              style={{ width: "100%", padding: "8px" }}
+              style={inputStyle}
             >
               <option value="Pending">Pending</option>
               <option value="Paid">Paid</option>
@@ -94,11 +97,18 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
             </select>
           </div>
 
-          <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-            <button type="button" onClick={onCancel} style={{ flex: 1, background: "#888" }}>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button 
+              type="button" 
+              onClick={onCancel} 
+              style={{ flex: 1, background: "#444", color: "#fff", border: "none", padding: "10px", borderRadius: "6px", cursor: "pointer" }}
+            >
               Cancel
             </button>
-            <button disabled={loading} style={{ flex: 1 }}>
+            <button 
+              disabled={loading} 
+              style={{ flex: 1, background: "#646cff", color: "#fff", border: "none", padding: "10px", borderRadius: "6px", cursor: "pointer", opacity: loading ? 0.7 : 1 }}
+            >
               {loading ? "Saving..." : "Save Changes"}
             </button>
           </div>
@@ -107,3 +117,13 @@ export default function EditPTP({ ptp, onCancel, refresh }) {
     </div>
   );
 }
+
+const inputStyle = {
+  width: "100%", 
+  padding: "10px", 
+  borderRadius: "6px", 
+  border: "1px solid #444", 
+  background: "#222", 
+  color: "#fff",
+  outline: "none"
+};
