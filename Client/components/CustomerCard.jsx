@@ -25,17 +25,31 @@ export default function CustomerCard({
           e.stopPropagation();
           onToggleVisit(c);
         }}
+        className="visit-toggle"
         style={{
           position: "absolute",
-          top: "10px",
-          right: "10px",
+          top: "5%",
+          right: "5%",
           background: "transparent",
-          border: "none",
-          fontSize: "1.5rem",
+          border: "2px solid #ffd700",
+          fontSize: "1.4rem",
           cursor: "pointer",
-          filter: c.todaysVisit ? "grayscale(0%)" : "grayscale(100%) brightness(0.5)"
+          opacity: c.todaysVisit ? 1 : 0.2,
+          transition: "opacity 0.2s, transform 0.2s",
+          zIndex: 10,
+          width: "50px",
+          height: "50px",
+          borderRadius: "50%",
         }}
-        title="Mark for Today's Visit"
+        title={c.todaysVisit ? "Remove from Today's Visit" : "Mark for Today's Visit"}
+        onMouseOver={(e) => {
+          e.currentTarget.style.opacity = "1";
+          e.currentTarget.style.transform = "scale(1.2)";
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.opacity = c.todaysVisit ? "1" : "0.2";
+          e.currentTarget.style.transform = "scale(1)";
+        }}
       >
         🚩
       </button>

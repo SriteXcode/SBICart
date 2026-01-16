@@ -20,7 +20,9 @@ router.use(auth);
 // GET all PTPs for the user
 router.get("/", async (req, res) => {
   try {
-    const ptps = await PTP.find({ user: req.user.id }).sort({ ptpDate: 1 });
+    const ptps = await PTP.find({ user: req.user.id })
+      .sort({ ptpDate: 1 })
+      .populate("customer");
     res.json(ptps);
   } catch (err) {
     res.status(500).json({ message: "Server error" });

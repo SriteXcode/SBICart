@@ -5,8 +5,11 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://sbicard-p981.onrender.com"|| "http://localhost:5173",
-  // origin: "https://sbicard-p981.onrender.com",
+  origin: [
+    "https://sbicard-p981.onrender.com", 
+    "http://localhost:5173", 
+    process.env.CLIENT_URL
+  ].filter(Boolean),
   credentials: true,
 }));
 app.use(express.json());

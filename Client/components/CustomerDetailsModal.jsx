@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import toast from "react-hot-toast";
 
 export default function CustomerDetailsModal({ c, onClose }) {
   const [ptp, setPtp] = useState(null);
@@ -38,7 +39,28 @@ export default function CustomerDetailsModal({ c, onClose }) {
         <p><b>Review:</b> {c.review}</p>
         <p><b>Due Amount:</b> ₹{c.dueAmount}</p>
         <p><b>Ex Day Amount:</b> ₹{c.exDayAmount}</p>
-        <p><b>Address:</b> {c.address}</p>
+        <p>
+          <b>Address:</b> {c.address} 
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              if (c.address) {
+                navigator.clipboard.writeText(c.address);
+                toast.success("Address copied!");
+              }
+            }}
+            style={{
+              marginLeft: "8px",
+              cursor: "pointer",
+              fontSize: "1rem",
+              display: "inline-flex",
+              verticalAlign: "middle"
+            }}
+            title="Copy Address"
+          >
+            📋
+          </span>
+        </p>
         <p><b>Notes:</b> {c.notes}</p>
 
         {ptp && (
