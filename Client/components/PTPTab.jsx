@@ -4,12 +4,11 @@ import AddPTP from "./AddPTP";
 import EditPTP from "./EditPTP";
 import toast from "react-hot-toast";
 
-export default function PTPTab() {
+export default function PTPTab({ onSelectCustomer }) {
   const [ptps, setPtps] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editPTP, setEditPTP] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingTest, setLoadingTest] = useState(false);
 
   // Filters
   const [filterDate, setFilterDate] = useState("");
@@ -52,51 +51,6 @@ export default function PTPTab() {
     }
   };
 
-  const urlBase64ToUint8Array = (base64String) => {
-    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
-
-  const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) {
-      alert("This browser does not support desktop notification");
-      return;
-    }
-    
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_PUBLIC_VAPID_KEY)
-        });
-
-        // Send subscription to backend
-        await api.post("/auth/subscribe", subscription);
-
-        new Notification("Notifications Enabled", {
-            body: "You will now receive daily PTP reminders.",
-            icon: "/vite.svg"
-        });
-        toast.success("Push notifications enabled!");
-      } catch (err) {
-        console.error("Push subscription error", err);
-        toast.error("Failed to subscribe to push notifications");
-      }
-    } else {
-      toast.error("Notification permission denied");
-    }
-  };
-
   const filteredPTPs = ptps.filter(p => {
     if (filterStatus !== "All" && p.status !== filterStatus) return false;
     if (filterDate) {
@@ -108,100 +62,93 @@ export default function PTPTab() {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "15px", flexWrap: "wrap" }}>
-        <button
-            onClick={fetchPTPs}
+      <div style={{
+        position: "sticky",
+        top: "135px",
+        zIndex: 900,
+        background: "#242424",
+        padding: "10px 0",
+        margin: "0 -10px 10px -10px",
+        paddingLeft: "10px",
+        paddingRight: "10px",
+        borderBottom: "1px solid #333"
+      }}>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "10px", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setShowAdd(true)}
             style={{
-                background: "#444",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "0 14px",
-                fontSize: "1.2rem",
-                cursor: "pointer"
+              flex: 1,
+              padding: "14px",
+              background: "#646cff",
+              color: "#fff",
+              borderRadius: "8px",
+              border: "none",
+              fontWeight: "bold"
             }}
-            title="Refresh List"
-        >
-            ↻
-        </button>
-        <button
-          onClick={() => setShowAdd(true)}
-          style={{
-            flex: 1,
-            padding: "14px",
-            background: "#646cff",
-            color: "#fff",
-            borderRadius: "8px",
-            border: "none",
-          }}
-        >
-          + Add PTP Reminder
-        </button>
-        <button
-          onClick={requestNotificationPermission}
-          style={{
-            padding: "14px",
-            background: "#333",
-            color: "#fff",
-            borderRadius: "8px",
-            border: "none",
-          }}
-        >
-          🔔 Enable Notifications
-        </button>
-        <button
-          onClick={async () => {
-             setLoadingTest(true);
-             try {
-                await api.post("/ptps/test-notification");
-                toast.success("Test sent! Check your notifications.");
-             } catch (err) {
-                toast.error("Failed to send test. Ensure notifications are enabled.");
-             } finally {
-                setLoadingTest(false);
-             }
-          }}
-          disabled={loadingTest}
-          style={{
-            padding: "14px",
-            background: "#555",
-            color: "#fff",
-            borderRadius: "8px",
-            border: "none",
-            opacity: loadingTest ? 0.7 : 1
-          }}
-        >
-          {loadingTest ? "Sending..." : "🧪 Test"}
-        </button>
+          >
+            + Add PTP Reminder
+          </button>
+        </div>
+
+        {/* FILTERS & REFRESH */}
+        <div style={{ 
+          display: "flex", 
+          gap: "8px", 
+          justifyContent: "space-between", 
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
+          <div style={{ display: "flex", gap: "8px", flex: 1, maxWidth: "300px" }}>
+            <input 
+                type="date" 
+                value={filterDate} 
+                onChange={(e) => setFilterDate(e.target.value)}
+                style={{ padding: "8px", borderRadius: "6px", border: "1px solid #333", background: "#222", color: "#fff", flex: 1, minWidth: "120px" }}
+            />
+            <select 
+                value={filterStatus} 
+                onChange={(e) => setFilterStatus(e.target.value)}
+                style={{ padding: "8px", borderRadius: "6px", border: "1px solid #333", background: "#222", color: "#fff", flex: 1, minWidth: "100px" }}
+            >
+                <option value="All">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Paid">Paid</option>
+                <option value="Broken">Broken</option>
+            </select>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button
+                onClick={fetchPTPs}
+                style={{
+                    background: "#444",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "8px 14px",
+                    fontSize: "1.1rem",
+                    cursor: "pointer",
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                }}
+                title="Refresh List"
+            >
+                ↻
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* FILTERS */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "15px", flexWrap: "wrap" }}>
-        <input 
-            type="date" 
-            value={filterDate} 
-            onChange={(e) => setFilterDate(e.target.value)}
-            style={{ padding: "8px", borderRadius: "6px", border: "1px solid #333", background: "#222", color: "#fff" }}
-        />
-        <select 
-            value={filterStatus} 
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{ padding: "8px", borderRadius: "6px", border: "1px solid #333", background: "#222", color: "#fff" }}
-        >
-            <option value="All">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Paid">Paid</option>
-            <option value="Broken">Broken</option>
-        </select>
-        {(filterDate || filterStatus !== "All") && (
-            <button 
-                onClick={() => { setFilterDate(""); setFilterStatus("All"); }}
-                style={{ padding: "8px 12px", background: "#444", border: "none", color: "#fff", borderRadius: "6px" }}
-            >
-                Clear Filters
-            </button>
-        )}
-      </div>
+      {(filterDate || filterStatus !== "All") && (
+          <button 
+              onClick={() => { setFilterDate(""); setFilterStatus("All"); }}
+              style={{ padding: "8px 12px", background: "#444", border: "none", color: "#fff", borderRadius: "6px", marginBottom: "15px", width: "100%" }}
+          >
+              Clear Filters
+          </button>
+      )}
 
       {loading ? (
         <p>Loading PTPs...</p>
@@ -210,13 +157,24 @@ export default function PTPTab() {
           {filteredPTPs.map((ptp) => (
             <div
               key={ptp._id}
+              onClick={() => {
+                if (ptp.customer && onSelectCustomer) {
+                  onSelectCustomer(ptp.customer);
+                } else if (!ptp.customer) {
+                   toast("No linked customer profile found.", { icon: "ℹ️" });
+                }
+              }}
               style={{
                 background: "#1a1a1a",
                 padding: "15px",
                 borderRadius: "8px",
                 border: "1px solid #333",
-                position: "relative"
+                position: "relative",
+                cursor: ptp.customer ? "pointer" : "default",
+                transition: "background 0.2s"
               }}
+              onMouseOver={(e) => { if(ptp.customer) e.currentTarget.style.background = "#222"; }}
+              onMouseOut={(e) => { if(ptp.customer) e.currentTarget.style.background = "#1a1a1a"; }}
             >
               <h3 style={{ margin: "0 0 5px 0" }}>{ptp.name}</h3>
               <p style={{ margin: "5px 0", color: "#ccc" }}>Account: {ptp.accountNo || "N/A"}</p>
@@ -225,7 +183,10 @@ export default function PTPTab() {
                 Date: {new Date(ptp.ptpDate).toDateString()}
               </p>
               
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", flexWrap: "wrap", gap: "10px" }}>
+              <div 
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", flexWrap: "wrap", gap: "10px" }}
+                onClick={(e) => e.stopPropagation()} // Prevent opening details when clicking actions
+              >
                 <span style={{ 
                     padding: "2px 8px", 
                     borderRadius: "4px", 

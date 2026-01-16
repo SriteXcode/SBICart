@@ -2,8 +2,23 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
+
+/* ================= GET CURRENT USER ================= */
+router.get("/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error("PROFILE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 /* ================= REGISTER ================= */
 router.post("/register", async (req, res) => {
@@ -85,7 +100,6 @@ router.post("/login", async (req, res) => {
 // For now, we will require the user to send their ID or token.
 // Better: Let's assume the frontend sends the token in headers, so we can use the middleware inside the route handler or apply it to this specific route if we import it.
 // I will import the auth middleware to secure this route.
-const auth = require("../middleware/auth");
 
 router.post("/subscribe", auth, async (req, res) => {
   try {
@@ -94,6 +108,16 @@ router.post("/subscribe", auth, async (req, res) => {
     res.status(201).json({ message: "Subscription saved" });
   } catch (err) {
     console.error("Subscription Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/unsubscribe", auth, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { pushSubscription: null });
+    res.json({ message: "Unsubscribed successfully" });
+  } catch (err) {
+    console.error("Unsubscribe Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

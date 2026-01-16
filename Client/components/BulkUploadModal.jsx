@@ -29,24 +29,63 @@ export default function BulkUploadModal({ onClose, onSuccess }) {
       const fileHeaders = jsonData[0];
       const rows = jsonData.slice(1);
 
-      // Simple mapping strategy
-      // We need to map file headers to: name, accountNo, mobile, balance, address, pincode
+      // Strict mapping config: Header Name in Excel (normalized) -> Object Key in DB
+      const mapping = {
+        "name": "name",
+        "account no": "accountNo",
+        "mobile no": "mobile",
+        "current balance": "balance",
+        "cd": "cd",
+        "review": "review",
+        "due amount": "dueAmount",
+        "ex day amount": "exDayAmount",
+        "address": "address",
+        "pincode": "pincode",
+        "cycle date": "cycleDate"
+      };
+
+      // Create a map of Index -> DB Key based on lowercase header match
+      const columnMap = {};
+      
+      fileHeaders.forEach((h, index) => {
+        if (!h) return;
+        const cleanHeader = String(h).trim().toLowerCase();
+        if (mapping[cleanHeader]) {
+          columnMap[index] = mapping[cleanHeader];
+        }
+      });
+
+      // Verification: Warn if critical columns are missing? 
+      // User asked for "strict header", implies we should expect these.
+      // But let's be flexible enough to allow upload even if optional fields like 'review' are missing,
+      // unless 'Name' is missing.
       
       const mappedData = rows.map(row => {
         const obj = {};
-        fileHeaders.forEach((h, i) => {
-          const val = row[i];
-          const header = h.toLowerCase().trim();
-          
-          if (header.includes("name")) obj.name = val;
-          else if (header.includes("account") || header.includes("ac")) obj.accountNo = val;
-          else if (header.includes("mobile") || header.includes("phone")) obj.mobile = val;
-          else if (header.includes("balance") || header.includes("amount")) obj.balance = val;
-          else if (header.includes("address")) obj.address = val;
-          else if (header.includes("pincode") || header.includes("pin")) obj.pincode = val;
-          else if (header.includes("cd")) obj.cd = val;
-          else if (header.includes("review")) obj.review = val;
-          else if (header.includes("note")) obj.notes = val;
+        
+        Object.keys(columnMap).forEach(index => {
+          const key = columnMap[index];
+          let val = row[index];
+
+          // Data cleaning/formatting
+          if (val === undefined || val === null) {
+              val = ""; // Normalize empty to empty string or appropriate default
+          }
+
+          if (key === "cycleDate") {
+             // Handle Excel Date (number) or String
+             if (typeof val === 'number') {
+                // Excel dates are days since 1900-01-01 (approx)
+                // JS dates are ms since 1970
+                // Simple conversion: new Date(Math.round((val - 25569)*86400*1000))
+                const date = new Date(Math.round((val - 25569)*86400*1000));
+                obj[key] = date;
+             } else if (val) {
+                obj[key] = new Date(val); // Try parsing string
+             }
+          } else {
+             obj[key] = val;
+          }
         });
         
         // Auto-extract pincode if not found in columns but present in address
@@ -54,20 +93,26 @@ export default function BulkUploadModal({ onClose, onSuccess }) {
           const match = String(obj.address).match(/\b\d{6}\b/);
           if (match) {
             obj.pincode = match[0];
-            obj.address = String(obj.address).replace(match[0], "").replace(/,\s*,/g, ",").trim();
-            if (obj.address.endsWith(",")) obj.address = obj.address.slice(0, -1).trim();
+            // Optional: Remove pincode from address? Keeping it simple for now.
           }
         }
 
         // Defaults
         if (!obj.status) obj.status = "Active";
-        if (!obj.name) obj.name = "Unknown"; // specific handling?
 
         return obj;
       });
 
+      // Filter rows that don't have a name (empty rows)
+      const validRows = mappedData.filter(d => d.name && String(d.name).trim() !== "");
+
+      if (validRows.length === 0) {
+        toast.error("No valid data found. Check column headers.");
+        return;
+      }
+
       setHeaders(fileHeaders);
-      setData(mappedData.filter(d => d.name && d.name !== "Unknown")); // Filter empty rows
+      setData(validRows);
       setStep(2);
     };
     reader.readAsBinaryString(file);
@@ -95,7 +140,9 @@ export default function BulkUploadModal({ onClose, onSuccess }) {
         {step === 1 && (
           <div style={{ textAlign: "center", padding: "20px" }}>
             <p>Select an .xlsx or .xls file.</p>
-            <p style={{fontSize: '0.8rem', color: '#aaa'}}>Expected columns: Name, Account, Mobile, Balance, Address, Pincode</p>
+            <p style={{fontSize: '0.8rem', color: '#aaa'}}>
+              Expected columns: Name, Account No, mobile no, current Balance, CD, Review, due amount, ex day amount, Address, Pincode, cycle date
+            </p>
             <input 
               type="file" 
               accept=".xlsx, .xls" 
@@ -122,7 +169,8 @@ export default function BulkUploadModal({ onClose, onSuccess }) {
                     <th style={thStyle}>Mobile</th>
                     <th style={thStyle}>Account</th>
                     <th style={thStyle}>Balance</th>
-                    <th style={thStyle}>Pincode</th>
+                    <th style={thStyle}>CD</th>
+                    <th style={thStyle}>Due Amt</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -132,7 +180,8 @@ export default function BulkUploadModal({ onClose, onSuccess }) {
                       <td style={tdStyle}>{c.mobile}</td>
                       <td style={tdStyle}>{c.accountNo}</td>
                       <td style={tdStyle}>{c.balance}</td>
-                      <td style={tdStyle}>{c.pincode}</td>
+                      <td style={tdStyle}>{c.cd}</td>
+                      <td style={tdStyle}>{c.dueAmount}</td>
                     </tr>
                   ))}
                 </tbody>
